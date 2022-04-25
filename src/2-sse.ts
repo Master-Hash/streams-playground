@@ -7,7 +7,7 @@ import { serve } from "https://deno.land/std/http/server.ts";
 
 const msg = new TextEncoder().encode("data: hello\r\n");
 
-serve((_) => {
+serve(() => {
   let timerId: number | undefined;
   const body = new ReadableStream({
     start(controller) {
