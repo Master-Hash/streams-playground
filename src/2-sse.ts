@@ -5,9 +5,20 @@
 
 import { serve } from "https://deno.land/std/http/server.ts";
 
-const msg = new TextEncoder().encode("data: hello\r\n");
+const msg = new TextEncoder().encode(`data: It is ${new Date().toISOString()}\r\n`);
 
 serve(() => {
+  const body = createTimerStream();
+  return new Response(body, {
+    headers: {
+      "Content-Type": "text/event-stream",
+    },
+  });
+});
+
+console.log("Listening on http://localhost:8000");
+
+function createTimerStream() {
   let timerId: number | undefined;
   const body = new ReadableStream({
     start(controller) {
@@ -21,11 +32,5 @@ serve(() => {
       }
     },
   });
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-    },
-  });
-});
-
-console.log("Listening on http://localhost:8000");
+  return body;
+}
