@@ -5,11 +5,29 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 import ReactDOMServer from "https://esm.sh/react-dom/server";
 
-const child = Deno.spawnChild("C:\\Users\\90895\\AppData\\Local\\Microsoft\\WindowsApps\\genact.exe", {
-  args: ["-m", "cargo"],
-});
+function createTimerStream() {
+  let timerId: number | undefined;
+  const body = new ReadableStream({
+    start(controller) {
+      timerId = setInterval(() => {
+        controller.enqueue(new TextEncoder().encode(`data: It is ${new Date().toISOString()}\r\n`));
+      }, 1000);
+    },
+    cancel() {
+      if (typeof timerId === "number") {
+        clearInterval(timerId);
+      }
+    },
+  });
+  return body;
+}
 
-let [s, fuck] = child.stdout.tee();
+// const child = Deno.spawnChild("C:\\Users\\90895\\AppData\\Local\\Microsoft\\WindowsApps\\genact.exe", {
+//   args: ["-m", "cargo"],
+// });
+
+let [s, fuck] = createTimerStream().tee();
+// let [s, fuck] = child.stdout.tee();
 
 serve(async (req) => {
   const u = new URL(req.url);
@@ -25,7 +43,7 @@ serve(async (req) => {
         new TransformStream<string, string>({
           transform: (chunk, controller) => {
             // 理论上可行，但 genact 必须按照脚本样式输出，不能交互式输出
-            controller.enqueue(`data: ${chunk}`);
+            controller.enqueue(`${chunk}`);
           },
         }),
       )
